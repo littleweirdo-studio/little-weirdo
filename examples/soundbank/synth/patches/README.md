@@ -53,7 +53,8 @@ Four LFOs provide modulation:
 Global filter settings:
 - `cutoff_frequency`: Filter cutoff (0-65535)
 - `resonance`: Filter resonance (0-65535)
-- `kind_of_filter`: Filter type ('low', 'high', 'band', 'notch')
+- `kind_of_filter`: Filter type (`Low`, `High`, `Band`, or `Notch`)
+- `slope`: Filter slope (`Db12` or `Db24`; defaults to `Db12`)
 - `enabled`: Enable/disable filter
 
 ## Mixer Configuration

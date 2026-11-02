@@ -1,3 +1,4 @@
+use little_weirdo::effects::filter::{FilterSlope, KindOfFilter};
 use little_weirdo::synth::{
     data::{
         patches::{BoxedPatch, BoxedPatches},
@@ -32,6 +33,11 @@ fn test_patch_deserialization_json() {
     assert_eq!(patch.fm_config.modulator_waveform, 0);
     assert_eq!(patch.fm_config.modulator_ratio, 1);
     assert_eq!(patch.fm_config.modulation_depth_hz, 100);
+    assert!(matches!(
+        patch.filter_config.kind_of_filter,
+        KindOfFilter::Low
+    ));
+    assert!(matches!(patch.filter_config.slope, FilterSlope::Db12));
 }
 
 #[test]
@@ -53,6 +59,35 @@ fn test_fm_patch_postcard_roundtrip() {
     assert_eq!(decoded.fm_config.carrier_waveform, 3);
     assert_eq!(decoded.fm_config.modulator_ratio, 2);
     assert_eq!(decoded.fm_config.modulation_depth_hz, 350);
+    assert!(matches!(
+        decoded.filter_config.kind_of_filter,
+        KindOfFilter::Low
+    ));
+    assert!(matches!(decoded.filter_config.slope, FilterSlope::Db12));
+}
+
+#[test]
+fn twenty_four_db_filter_mode_roundtrips_in_postcard() {
+    let mut value: serde_json::Value = serde_json::from_slice(include_bytes!(
+        "../examples/soundbank/synth/patches/original/bass.json"
+    ))
+    .unwrap();
+    value["filter_config"]["slope"] = serde_json::Value::String("Db24".into());
+    let patch: Patch = serde_json::from_value(value).unwrap();
+    assert!(matches!(
+        patch.filter_config.kind_of_filter,
+        KindOfFilter::Low
+    ));
+
+    let mut encoded = [0; 512];
+    let encoded = postcard::to_slice(&patch, &mut encoded).unwrap();
+    let decoded: Patch = postcard::from_bytes(encoded).unwrap();
+
+    assert!(matches!(
+        decoded.filter_config.kind_of_filter,
+        KindOfFilter::Low
+    ));
+    assert!(matches!(decoded.filter_config.slope, FilterSlope::Db24));
 }
 
 #[test]
@@ -69,10 +104,10 @@ fn fm_example_patch_is_available_as_json_and_postcard() {
     for patch in [&json_patch, &postcard_patch] {
         assert_eq!(patch.name, "fm_basic");
         assert!(patch.fm_config.enabled);
-        assert_eq!(patch.fm_config.carrier_waveform, 0);
-        assert_eq!(patch.fm_config.modulator_waveform, 0);
-        assert_eq!(patch.fm_config.modulator_ratio, 3);
-        assert_eq!(patch.fm_config.modulation_depth_hz, 200);
+        assert_eq!(patch.fm_config.carrier_waveform, 6);
+        assert_eq!(patch.fm_config.modulator_waveform, 10);
+        assert_eq!(patch.fm_config.modulator_ratio, 1);
+        assert_eq!(patch.fm_config.modulation_depth_hz, 70);
         assert_eq!(patch.synth_config.mode, SynthMode::OctoPoly);
     }
 }
@@ -84,10 +119,10 @@ fn fm_carrier_waveform_is_serialized_in_postcard_asset() {
     ))
     .unwrap();
 
-    assert_eq!(patch.fm_config.carrier_waveform, 0);
-    assert_eq!(patch.fm_config.modulator_waveform, 0);
-    assert_eq!(patch.fm_config.modulator_ratio, 3);
-    assert_eq!(patch.fm_config.modulation_depth_hz, 200);
+    assert_eq!(patch.fm_config.carrier_waveform, 6);
+    assert_eq!(patch.fm_config.modulator_waveform, 10);
+    assert_eq!(patch.fm_config.modulator_ratio, 1);
+    assert_eq!(patch.fm_config.modulation_depth_hz, 70);
 }
 
 #[test]

@@ -9,6 +9,7 @@ use crossterm::{
     execute,
     terminal::{EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode, enable_raw_mode},
 };
+use little_weirdo::effects::filter::FilterSlope;
 use little_weirdo::synth::data::patches::{BoxedPatch, BoxedPatches, Patches};
 use little_weirdo::synth::noise::{self, NoiseKind};
 use little_weirdo::synth::patch::Patch;
@@ -99,6 +100,7 @@ enum EffectParameter {
     FilterCutoff,
     FilterResonance,
     FilterKind,
+    FilterSlope,
     DistortionKind,
     DistortionThreshold,
 }
@@ -183,6 +185,7 @@ struct SynthPanel {
     filter_cutoff: u16,
     filter_resonance: u16,
     filter_kind: u8,
+    filter_slope: u8,
     distortion_enabled: bool,
     distortion_kind: u8,
     distortion_threshold: u16,
@@ -347,6 +350,13 @@ fn main() -> anyhow::Result<()> {
         let mut s = synth.lock().unwrap();
         s.control().filter_settings()
     };
+    let filter_slope = {
+        let mut s = synth.lock().unwrap();
+        match s.control().filter_slope() {
+            FilterSlope::Db12 => 0,
+            FilterSlope::Db24 => 1,
+        }
+    };
     let (distortion_enabled, distortion_kind, distortion_threshold) = {
         let mut s = synth.lock().unwrap();
         s.control().overdrive_settings()
@@ -444,6 +454,7 @@ fn main() -> anyhow::Result<()> {
         filter_cutoff,
         filter_resonance,
         filter_kind,
+        filter_slope,
         distortion_enabled: patch.overdrive_config.enabled,
         distortion_kind,
         distortion_threshold,
@@ -767,7 +778,7 @@ fn menu_item_count(menu: Menu) -> usize {
     match menu {
         Menu::Fm => 5,
         Menu::Voices => 4,
-        Menu::Effects => 16,
+        Menu::Effects => 17,
         Menu::Envelope => 4,
         Menu::Live => 1,
         Menu::Devices => 2,
@@ -993,7 +1004,7 @@ fn adjust_effect_selected(
         0 => Some((EffectToggle::Delay, &mut panel.delay_enabled)),
         4 => Some((EffectToggle::Flanger, &mut panel.flanger_enabled)),
         9 => Some((EffectToggle::Filter, &mut panel.filter_enabled)),
-        13 => Some((EffectToggle::Distortion, &mut panel.distortion_enabled)),
+        14 => Some((EffectToggle::Distortion, &mut panel.distortion_enabled)),
         _ => None,
     };
     if let Some((toggle, enabled)) = toggle {
@@ -1047,7 +1058,11 @@ fn adjust_effect_selected(
                 % 4;
             EffectParameter::FilterKind
         }
-        14 => {
+        13 => {
+            panel.filter_slope = panel.filter_slope.wrapping_add(1) % 2;
+            EffectParameter::FilterSlope
+        }
+        15 => {
             panel.distortion_kind =
                 panel
                     .distortion_kind
@@ -1108,6 +1123,10 @@ fn on_off_select(select: i8) -> &'static str {
 
 fn filter_kind_name(kind: u8) -> &'static str {
     ["Low-pass", "High-pass", "Band-pass", "Notch"][kind as usize % 4]
+}
+
+fn filter_slope_name(slope: u8) -> &'static str {
+    ["12 dB/oct", "24 dB/oct"][slope as usize % 2]
 }
 
 fn distortion_kind_name(kind: u8) -> &'static str {
@@ -1300,8 +1319,12 @@ fn draw_panel(frame: &mut ratatui::Frame<'_>, panel: &SynthPanel) {
             format!("│   ├─ Cutoff     : {}", panel.filter_cutoff),
             format!("│   ├─ Resonance  : {}", panel.filter_resonance),
             format!(
-                "│   └─ Type       : {}",
+                "│   ├─ Type       : {}",
                 filter_kind_name(panel.filter_kind)
+            ),
+            format!(
+                "│   └─ Slope      : {}",
+                filter_slope_name(panel.filter_slope)
             ),
             format!("└──Distortion     : {}", on_off(panel.distortion_enabled)),
             format!(
@@ -1701,6 +1724,7 @@ fn process_command(synth: &mut synth::Synth, command: AudioCommand) {
                 EffectParameter::FilterCutoff => control.adjust_filter_cutoff(clockwise),
                 EffectParameter::FilterResonance => control.adjust_filter_resonance(clockwise),
                 EffectParameter::FilterKind => control.cycle_filter_kind(clockwise),
+                EffectParameter::FilterSlope => control.cycle_filter_slope(),
                 EffectParameter::DistortionKind => control.cycle_overdrive_kind(clockwise),
                 EffectParameter::DistortionThreshold => {
                     control.adjust_overdrive_threshold(clockwise)

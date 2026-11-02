@@ -5,10 +5,16 @@
 //! this separate interface.
 
 use super::{data::frequencies::MIDI2FREQ, Synth, AMOUNT_OF_VOICES};
-use crate::{effects::{
-    filter::KindOfFilter,
-    overdrive::{KindOfOverdrive, OverdriveConfiguration},
-}, synth::{noise::NoiseKind, patch::{Patch, SynthConfiguration}}};
+use crate::{
+    effects::{
+        filter::{FilterSlope, KindOfFilter},
+        overdrive::{KindOfOverdrive, OverdriveConfiguration},
+    },
+    synth::{
+        noise::NoiseKind,
+        patch::{Patch, SynthConfiguration},
+    },
+};
 extern crate alloc;
 use alloc::string::String;
 
@@ -53,7 +59,7 @@ impl<'a> SynthControl<'a> {
                 self.synth.lfo[0].get_lfo_config(),
                 self.synth.lfo[1].get_lfo_config(),
                 self.synth.lfo[2].get_lfo_config(),
-                self.synth.lfo[3].get_lfo_config(), 
+                self.synth.lfo[3].get_lfo_config(),
             ],
             filter_config: self.synth.filter.config,
             mixer_config: self.synth.mixer.config,
@@ -61,7 +67,9 @@ impl<'a> SynthControl<'a> {
             bitcrunch_config: self.synth.bitcrunch.config,
             delay_config: self.synth.delay.config,
             routering_config: self.synth.router.config,
-            synth_config: SynthConfiguration { mode: super::patch::SynthMode::OctoPoly },
+            synth_config: SynthConfiguration {
+                mode: super::patch::SynthMode::OctoPoly,
+            },
             flanger_config: self.synth.flanger.config,
             fm_config: self.synth.fm_config,
         }
@@ -78,7 +86,7 @@ impl<'a> SynthControl<'a> {
         }
     }
 
-     pub fn change_all_voices_noise(&mut self, noise: NoiseKind) {
+    pub fn change_all_voices_noise(&mut self, noise: NoiseKind) {
         for i in 0..AMOUNT_OF_VOICES {
             if self.synth.fm_config.enabled && i % 2 == 1 {
                 continue;
@@ -90,34 +98,33 @@ impl<'a> SynthControl<'a> {
     }
 
     pub fn change_lfo(&mut self, id: u8, waveform: u8, timing: u16) {
-         let lfo = &mut self.synth.lfo[id as usize];
-         let mut config = lfo.get_lfo_config();
-         config.soundbank_index = waveform;
-         config.time = timing;
+        let lfo = &mut self.synth.lfo[id as usize];
+        let mut config = lfo.get_lfo_config();
+        config.soundbank_index = waveform;
+        config.time = timing;
         lfo.reload_lfo(config);
     }
-    
-    pub fn change_all_voices_volume(&mut self, volume: u8)  {
+
+    pub fn change_all_voices_volume(&mut self, volume: u8) {
         let mut config = self.synth.mixer.config;
-         for i in 0..AMOUNT_OF_VOICES {
+        for i in 0..AMOUNT_OF_VOICES {
             config.gain_voices[i] = volume;
-         }
-          self.synth.mixer.reload(config);
+        }
+        self.synth.mixer.reload(config);
     }
 
-    pub fn change_lfo_routing(&mut self, lfo_filter: i8, lfo_freq: i8, lfo_freq_amount: u16 ) {
+    pub fn change_lfo_routing(&mut self, lfo_filter: i8, lfo_freq: i8, lfo_freq_amount: u16) {
         let mut routing = self.synth.router.config;
         routing.lfo_to_filter = lfo_filter;
         routing.lfo_to_freq = lfo_freq;
-        if  routing.lfo_to_freq != -1 {
+        if routing.lfo_to_freq != -1 {
             routing.lfo_to_freq_amount = lfo_freq_amount;
         } else {
-             routing.lfo_to_freq_amount = 0;
+            routing.lfo_to_freq_amount = 0;
         }
 
-           self.synth.router.reload(routing);
+        self.synth.router.reload(routing);
     }
-
 
     /// Change the settings of all envelopes
     ///
@@ -128,12 +135,11 @@ impl<'a> SynthControl<'a> {
         sustain: Option<i16>,
         release: Option<u16>,
     ) {
-
         let mut routing = self.synth.router.config;
-          for i in 0..AMOUNT_OF_VOICES {
+        for i in 0..AMOUNT_OF_VOICES {
             routing.voices_to_envelop[i] = i as u8;
-          }
-          self.synth.router.reload(routing);
+        }
+        self.synth.router.reload(routing);
 
         for i in 0..AMOUNT_OF_VOICES {
             let mut config = self.synth.envelops[i].configuration;
@@ -150,8 +156,6 @@ impl<'a> SynthControl<'a> {
             if let Some(val) = release {
                 config.release_time = val;
             }
-
-            
 
             self.synth.envelops[i].update_configuration(config);
         }
@@ -242,6 +246,10 @@ impl<'a> SynthControl<'a> {
         )
     }
 
+    pub fn filter_slope(&self) -> FilterSlope {
+        self.synth.filter.config.slope
+    }
+
     pub fn toggle_filter(&mut self) {
         let mut config = self.synth.filter.config;
         config.enabled = !config.enabled;
@@ -281,6 +289,16 @@ impl<'a> SynthControl<'a> {
             (KindOfFilter::Notch, false) => KindOfFilter::Band,
         };
         config.kind_of_filter = kind;
+        self.synth.filter.reload(config);
+    }
+
+    pub fn cycle_filter_slope(&mut self) {
+        let mut config = self.synth.filter.config;
+        let slope = match config.slope {
+            FilterSlope::Db12 => FilterSlope::Db24,
+            FilterSlope::Db24 => FilterSlope::Db12,
+        };
+        config.slope = slope;
         self.synth.filter.reload(config);
     }
 
@@ -340,7 +358,7 @@ impl<'a> SynthControl<'a> {
     }
 
     pub fn set_fm_enabled(&mut self, enabled: bool) {
-           self.synth.fm_config.enabled = enabled;
+        self.synth.fm_config.enabled = enabled;
     }
 
     pub fn adjust_fm_modulator_waveform(&mut self, clockwise: bool) {
@@ -444,8 +462,7 @@ impl<'a> SynthControl<'a> {
     }
 
     pub fn set_glide_enabled(&mut self, enabled: bool) {
-        
-    for i in 0..AMOUNT_OF_VOICES {
+        for i in 0..AMOUNT_OF_VOICES {
             if self.synth.fm_config.enabled && i % 2 == 1 {
                 continue;
             }
@@ -456,16 +473,12 @@ impl<'a> SynthControl<'a> {
         }
     }
 
-
-    
-
-      pub fn set_glide_time(&mut self, time: u8) {
-
+    pub fn set_glide_time(&mut self, time: u8) {
         if time == 0 {
             return;
         }
-        
-    for i in 0..AMOUNT_OF_VOICES {
+
+        for i in 0..AMOUNT_OF_VOICES {
             if self.synth.fm_config.enabled && i % 2 == 1 {
                 continue;
             }
@@ -474,7 +487,6 @@ impl<'a> SynthControl<'a> {
             self.synth.voices[i].reload(config);
         }
     }
-
 
     pub fn toggle_delay(&mut self) {
         let mut config = self.synth.delay.config;
@@ -529,7 +541,6 @@ impl<'a> SynthControl<'a> {
     pub fn change_main_volume(&mut self, velocity: u8) {
         self.synth.mixer.config.gain_main = velocity;
     }
-
 
     /// Change the filter cutoff frequency
     pub fn change_cutoff(&mut self, velocity: u8) {

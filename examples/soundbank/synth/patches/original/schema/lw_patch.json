@@ -186,13 +186,22 @@
         },
         "kind_of_filter": {
           "type": "string",
-          "description": "Type of filter ('low', 'high', 'band', 'notch')",
+          "description": "Filter type",
           "enum": [
             "Low",
             "High",
             "Band",
             "Notch"
           ]
+        },
+        "slope": {
+          "type": "string",
+          "description": "Filter slope in decibels per octave",
+          "enum": [
+            "Db12",
+            "Db24"
+          ],
+          "default": "Db12"
         },
         "enabled": {
           "type": "boolean",
