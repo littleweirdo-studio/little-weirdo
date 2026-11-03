@@ -1,5 +1,5 @@
 //! Low, high, band, and notch filters.
-use crate::effects::Effect;
+use crate::{effects::Effect, math::fixed_mul};
 use serde::{Deserialize, Serialize};
 
 const FIXED_ONE: i64 = 1 << 16;
@@ -136,9 +136,7 @@ impl FilterStage {
     }
 }
 
-fn fixed_mul(a: i64, b: i64) -> i64 {
-    ((a as i128 * b as i128) >> 16).clamp(i64::MIN as i128, i64::MAX as i128) as i64
-}
+
 
 #[cfg(test)]
 mod tests {

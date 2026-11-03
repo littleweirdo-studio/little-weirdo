@@ -16,7 +16,6 @@ use crate::{
     },
 };
 extern crate alloc;
-use alloc::string::String;
 
 /// A live-control interface borrowing a synthesizer mutably.
 ///

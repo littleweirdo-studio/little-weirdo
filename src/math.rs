@@ -57,6 +57,11 @@ pub fn fx_mul(a: i64, b: i32) -> i64 {
     (a * b as i64) >> self::FX_SHIFT
 }
 
+pub fn fixed_mul(a: i64, b: i64) -> i64 {
+    ((a as i128 * b as i128) >> 16).clamp(i64::MIN as i128, i64::MAX as i128) as i64
+}
+
+
 #[cfg(test)]
 mod tests {
     use super::{envelope_level, percentage};
