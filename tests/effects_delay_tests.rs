@@ -82,6 +82,40 @@ fn delay_time_is_converted_from_milliseconds_using_sample_rate() {
 }
 
 #[test]
+fn reducing_delay_time_shortens_the_existing_delay_buffer() {
+    let mut effect = Delay::new(
+        DelayConfiguration {
+            enabled: true,
+            delay_time: 4,
+            delay_decrease_percentage: 0,
+            mix_percentage: 100,
+            feedback: false,
+            feedback_percentage: 0,
+        },
+        1000,
+    );
+
+    for sample in [0, 0, 0, 1000, 0] {
+        effect.clock(sample);
+    }
+
+    effect.reload(
+        DelayConfiguration {
+            enabled: true,
+            delay_time: 2,
+            delay_decrease_percentage: 0,
+            mix_percentage: 100,
+            feedback: false,
+            feedback_percentage: 0,
+        },
+        1000,
+    );
+
+    assert_eq!(effect.clock(0), 0);
+    assert_eq!(effect.clock(0), 1000);
+}
+
+#[test]
 fn delay_saturates_signal_mix_instead_of_overflowing() {
     let mut positive_effect = Delay::new(
         DelayConfiguration {

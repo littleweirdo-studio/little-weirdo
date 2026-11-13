@@ -46,6 +46,10 @@ impl Delay {
     pub fn reload(&mut self, config: DelayConfiguration, sample_rate: u16) {
         self.config = config;
         self.delay_time = Self::delay_time_in_samples(config.delay_time, sample_rate);
+        let buffer_capacity = self.delay_time.saturating_add(1);
+        while self.buffer.len() > buffer_capacity {
+            self.buffer.pop_front();
+        }
         self.delay_cycle_remaining = 0;
         self.initial_cycle_completed = false;
         self.current_feedback_percentage = config.feedback_percentage;
