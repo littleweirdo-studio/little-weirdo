@@ -12,7 +12,10 @@ const SAMPLE_RATE: u16 = 44_100; // Audio sample rate in Hz
 pub fn criterion_benchmark3(c: &mut Criterion) {
     let mut random = SmallRng::seed_from_u64(0x2238203);
 
-    let bit_crunch_config = BitcrunchConfiguration { enabled: true };
+    let bit_crunch_config = BitcrunchConfiguration {
+        enabled: true,
+        ..BitcrunchConfiguration::default()
+    };
 
     let mut bit_crunch = Bitcrunch::new(bit_crunch_config);
 

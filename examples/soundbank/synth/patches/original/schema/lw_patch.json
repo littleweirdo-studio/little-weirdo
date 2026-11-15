@@ -288,6 +288,20 @@
         "enabled": {
           "type": "boolean",
           "description": "Whether bitcrushing effect (8 bit style) is enabled"
+        },
+        "quantize_step": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 65535,
+          "default": 256,
+          "description": "Amplitude quantization step size"
+        },
+        "sample_hold_interval": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 255,
+          "default": 4,
+          "description": "Number of input samples averaged and held per output update"
         }
       },
       "required": [

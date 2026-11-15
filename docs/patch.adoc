@@ -89,7 +89,9 @@ zero applies AVC changes immediately.
 
 - Overdrive: Distortion with threshold, type ('Soft', 'Hard', 'Softer'), enable flag, and makeup gain
 - Overdrive `gain_percentage`: Post-effect gain from 0% (unchanged) to 100% (2x amplitude)
-- Bitcrunch: 8-bit style bit reduction effect
+- Bitcrunch: 8-bit style bit reduction effect with configurable `quantize_step`
+  (amplitude resolution, default `256`) and `sample_hold_interval` (input samples
+  averaged per output update, default `4`). Both values must be at least `1`.
 - Delay: Configurable delay time, mix, and optional feedback
 - Flanger: Modulated delay with `enabled`, `base_delay_time_ms`, `depth_ms`, `rate_hz`, and `mix_percentage`
 

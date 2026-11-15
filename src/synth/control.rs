@@ -233,9 +233,29 @@ impl<'a> SynthControl<'a> {
         self.synth.bitcrunch.config.enabled
     }
 
+    pub fn bitcrunch_settings(&self) -> (bool, u16, u8) {
+        (
+            self.synth.bitcrunch.config.enabled,
+            self.synth.bitcrunch.config.quantize_step,
+            self.synth.bitcrunch.config.sample_hold_interval,
+        )
+    }
+
     pub fn toggle_bitcrunch(&mut self) {
         let mut config = self.synth.bitcrunch.config;
         config.enabled = !config.enabled;
+        self.synth.bitcrunch.reload(config);
+    }
+
+    pub fn set_bitcrunch_quantize_step(&mut self, quantize_step: u16) {
+        let mut config = self.synth.bitcrunch.config;
+        config.quantize_step = quantize_step.max(1);
+        self.synth.bitcrunch.reload(config);
+    }
+
+    pub fn set_bitcrunch_sample_hold_interval(&mut self, sample_hold_interval: u8) {
+        let mut config = self.synth.bitcrunch.config;
+        config.sample_hold_interval = sample_hold_interval.max(1);
         self.synth.bitcrunch.reload(config);
     }
 

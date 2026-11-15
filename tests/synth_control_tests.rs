@@ -40,6 +40,10 @@ fn live_controls_are_available_through_a_separate_handle() {
     let mut synth = Synth::new(44_100, 0, Arc::new(patches), Arc::new(waveforms));
     {
         let mut control: SynthControl<'_> = synth.control();
+        control.set_bitcrunch_quantize_step(64);
+        control.set_bitcrunch_sample_hold_interval(2);
+        assert_eq!(control.bitcrunch_settings(), (false, 64, 2));
+
         assert_eq!(control.fm_carrier_waveform(), 0);
         control.adjust_fm_carrier_waveform(true);
         assert_eq!(control.fm_carrier_waveform(), 1);
