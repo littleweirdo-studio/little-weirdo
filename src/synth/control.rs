@@ -74,6 +74,15 @@ impl<'a> SynthControl<'a> {
         }
     }
 
+    pub fn replace_stored_patch(&mut self, index: u8, patch: Patch) -> bool {
+        let patches = alloc::sync::Arc::make_mut(&mut self.synth.patches);
+        let Some(stored_patch) = patches.data.get_mut(index as usize) else {
+            return false;
+        };
+        stored_patch.data = alloc::boxed::Box::new(patch);
+        true
+    }
+
     pub fn change_all_voices(&mut self, voice_id: u8) {
         for i in 0..AMOUNT_OF_VOICES {
             if self.synth.fm_config.enabled && i % 2 == 1 {
@@ -218,6 +227,16 @@ impl<'a> SynthControl<'a> {
                 0
             },
         )
+    }
+
+    pub fn bitcrunch_enabled(&self) -> bool {
+        self.synth.bitcrunch.config.enabled
+    }
+
+    pub fn toggle_bitcrunch(&mut self) {
+        let mut config = self.synth.bitcrunch.config;
+        config.enabled = !config.enabled;
+        self.synth.bitcrunch.reload(config);
     }
 
     pub fn flanger_settings(&self) -> (bool, u16, u16, u16, u8) {
