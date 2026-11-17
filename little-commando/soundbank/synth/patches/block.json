@@ -250,7 +250,9 @@
     "gain_percentage": 0
   },
   "bitcrunch_config": {
-    "enabled": false
+    "enabled": false,
+    "quantize_step": 256,
+    "sample_hold_interval": 4
   },
   "delay_config": {
     "enabled": false,

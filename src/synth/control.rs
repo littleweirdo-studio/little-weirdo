@@ -134,6 +134,23 @@ impl<'a> SynthControl<'a> {
         self.synth.router.reload(routing);
     }
 
+    /// Set LFO destinations (-1 for off, 0..=3 for LFOs) and frequency depth in Hz.
+    /// The depth is retained even while frequency routing is off.
+    pub fn set_lfo_routing(
+        &mut self,
+        lfo_filter: i8,
+        lfo_freq: i8,
+        lfo_freq_amount: u16,
+        lfo_balance: i8,
+    ) {
+        let mut routing = self.synth.router.config;
+        routing.lfo_to_filter = lfo_filter;
+        routing.lfo_to_freq = lfo_freq;
+        routing.lfo_to_freq_amount = lfo_freq_amount;
+        routing.lfo_to_balance = lfo_balance;
+        self.synth.router.reload(routing);
+    }
+
     /// Change the settings of all envelopes
     ///
     pub fn change_all_envelopes(
